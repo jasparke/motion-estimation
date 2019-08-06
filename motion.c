@@ -91,7 +91,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     uint16_t minimumSAD[numBlocksY][numBlocksX];
     memset(minimumSAD, INT_MAX, numBlocksX * numBlocksY * sizeof(uint16_t));
 
-    register uint16_t SAD;
+    uint16_t SAD;
 
     int x = 0;
     int y = 0;
@@ -175,8 +175,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     /* Load a shifted version of the block for computing the SAD
                      *
                      * if we progress row by row for a given r value (read: static x pos), we only 
-                     * need to read each subsequent row for the SAD operation, replacing the top-most vector
-                     * To implement will need to move to array based storing of row vectors.
+                     * need to read each subsequent row for the SAD operation, replacing the top-most vectors
+                     * 
+                     * Initially load the top of the s chain.
                      **/
                     offset = 0;
                     prevRows[0]   = vld1q_u8(&(prev[y+s]   [x+r]));
@@ -195,17 +196,13 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     prevRows[13]  = vld1q_u8(&(prev[y+s+13][x+r]));
                     prevRows[14]  = vld1q_u8(&(prev[y+s+14][x+r]));
                     prevRows[15]  = vld1q_u8(&(prev[y+s+15][x+r]));
-                for (;s < sHigh;s++) {
+
+                for (;s < sHigh - 1;s++) {
                     if (s == 0) continue;
-                    /* Compute the Sum in 3 steps: 
-                     * vapdq_u8: Compute the absdifference of elements in curr & prev. Return uint8x16_t.
-                     * vpaddlq_u8: Pairwise additon to transform to u16 from u8 to prevent overflow. Return uint16x8_t.
-                     * vaddq_u16: Computes the sum of all rows abs differences.
-                     */
                     sumAbsoluteDifferences(&SAD, currRows, prevRows, offset);
                     
                     /* Load the next row for shift s */
-                    prevRows[offset] = vld1q_u8(&(prev[y+s+15][x+r]));
+                    prevRows[++offset] = vld1q_u8(&(prev[y+s+15][x+r]));
 
                     if (SAD < minimumSAD[blockY][blockX]) {
                         minimumSAD[blockY][blockX] = SAD;
@@ -239,6 +236,12 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
 }
 
 void sumAbsoluteDifferences(uint16_t * SAD, uint8x16_t * curr, uint8x16_t * prev, int offset) {
+       /* Compute the Sum in 3 steps: 
+        * vapdq_u8: Compute the absdifference of elements in curr & prev. Return uint8x16_t.
+        * vpaddlq_u8: Pairwise additon to transform to u16 from u8 to prevent overflow. Return uint16x8_t.
+        * vaddq_u16: Computes the sum of all rows abs differences.
+        */
+
         /* Compute SAD for identical block position in frame */
         uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr[0],  prev[0+offset]));
         sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr[1],  prev[1+offset])));
@@ -258,13 +261,13 @@ void sumAbsoluteDifferences(uint16_t * SAD, uint8x16_t * curr, uint8x16_t * prev
         sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr[15], prev[15+offset])));
 
         /* Sum the resultant vector elements */
-        SAD  = vgetq_lane_u16(sum, 0);
-        SAD += vgetq_lane_u16(sum, 1);
-        SAD += vgetq_lane_u16(sum, 2);
-        SAD += vgetq_lane_u16(sum, 3);
-        SAD += vgetq_lane_u16(sum, 4);
-        SAD += vgetq_lane_u16(sum, 5);
-        SAD += vgetq_lane_u16(sum, 6);
-        SAD += vgetq_lane_u16(sum, 7);
+        *SAD  = vgetq_lane_u16(sum, 0);
+        *SAD += vgetq_lane_u16(sum, 1);
+        *SAD += vgetq_lane_u16(sum, 2);
+        *SAD += vgetq_lane_u16(sum, 3);
+        *SAD += vgetq_lane_u16(sum, 4);
+        *SAD += vgetq_lane_u16(sum, 5);
+        *SAD += vgetq_lane_u16(sum, 6);
+        *SAD += vgetq_lane_u16(sum, 7);
 
 }
