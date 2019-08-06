@@ -175,9 +175,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             /* Loop through different motion vectors and compute the SAD for each
              * This can likely be sped up by "snaking" outwards from initial block.
              **/
-            for (int s = sLow; s < sHigh; s++) {
+            for (s = sLow; s < sHigh; s++) {
                 if (s == 0) continue;
-                for (int r = rLow; r < rHigh; r++) {
+                for (r = rLow; r < rHigh; r++) {
                     if (r == 0) continue;
 
                     /* Load a shifted version of the block for computing the SAD */
