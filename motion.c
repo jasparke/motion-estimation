@@ -106,22 +106,22 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
         for (int blockX = 0; blockX < numBlocksX; blockX) {
 
             /* Load each row of the block into a vector */
-            uint8x16_t curr0  = vld1q_u8(&curr[y]   [x]);
-            uint8x16_t curr1  = vld1q_u8(&curr[y+1] [x]);
-            uint8x16_t curr2  = vld1q_u8(&curr[y+2] [x]);
-            uint8x16_t curr3  = vld1q_u8(&curr[y+3] [x]);
-            uint8x16_t curr4  = vld1q_u8(&curr[y+4] [x]);
-            uint8x16_t curr5  = vld1q_u8(&curr[y+5] [x]);
-            uint8x16_t curr6  = vld1q_u8(&curr[y+6] [x]);
-            uint8x16_t curr7  = vld1q_u8(&curr[y+7] [x]);
-            uint8x16_t curr8  = vld1q_u8(&curr[y+8] [x]);
-            uint8x16_t curr9  = vld1q_u8(&curr[y+9] [x]);
-            uint8x16_t curr10 = vld1q_u8(&curr[y+10][x]);
-            uint8x16_t curr11 = vld1q_u8(&curr[y+11][x]);
-            uint8x16_t curr12 = vld1q_u8(&curr[y+12][x]);
-            uint8x16_t curr13 = vld1q_u8(&curr[y+13][x]);
-            uint8x16_t curr14 = vld1q_u8(&curr[y+14][x]);
-            uint8x16_t curr15 = vld1q_u8(&curr[y+15][x]);
+            uint8x16_t curr0  = vld1q_u8(&(curr[y]   [x]));
+            uint8x16_t curr1  = vld1q_u8(&(curr[y+1] [x]));
+            uint8x16_t curr2  = vld1q_u8(&(curr[y+2] [x]));
+            uint8x16_t curr3  = vld1q_u8(&(curr[y+3] [x]));
+            uint8x16_t curr4  = vld1q_u8(&(curr[y+4] [x]));
+            uint8x16_t curr5  = vld1q_u8(&(curr[y+5] [x]));
+            uint8x16_t curr6  = vld1q_u8(&(curr[y+6] [x]));
+            uint8x16_t curr7  = vld1q_u8(&(curr[y+7] [x]));
+            uint8x16_t curr8  = vld1q_u8(&(curr[y+8] [x]));
+            uint8x16_t curr9  = vld1q_u8(&(curr[y+9] [x]));
+            uint8x16_t curr10 = vld1q_u8(&(curr[y+10][x]));
+            uint8x16_t curr11 = vld1q_u8(&(curr[y+11][x]));
+            uint8x16_t curr12 = vld1q_u8(&(curr[y+12][x]));
+            uint8x16_t curr13 = vld1q_u8(&(curr[y+13][x]));
+            uint8x16_t curr14 = vld1q_u8(&(curr[y+14][x]));
+            uint8x16_t curr15 = vld1q_u8(&(curr[y+15][x]));
 
             /* Adjust the bounds for motion vectors to account for edges */
             int sLow  = (blockY == 0) ? 0 : -SEARCH_BOUND;
@@ -135,22 +135,22 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     /* Load a shifted version of the block for computing the SAD */
                     /* FUTURE: Optimize this to not reload pixels that are used multiple times. 
                      * Change prev to an array and cycle through it. */
-                    uint8x16_t prev0  = vld1q_u8(&prev[y]   [x]);
-                    uint8x16_t prev1  = vld1q_u8(&prev[y+1] [x]);
-                    uint8x16_t prev2  = vld1q_u8(&prev[y+2] [x]);
-                    uint8x16_t prev3  = vld1q_u8(&prev[y+3] [x]);
-                    uint8x16_t prev4  = vld1q_u8(&prev[y+4] [x]);
-                    uint8x16_t prev5  = vld1q_u8(&prev[y+5] [x]);
-                    uint8x16_t prev6  = vld1q_u8(&prev[y+6] [x]);
-                    uint8x16_t prev7  = vld1q_u8(&prev[y+7] [x]);
-                    uint8x16_t prev8  = vld1q_u8(&prev[y+8] [x]);
-                    uint8x16_t prev9  = vld1q_u8(&prev[y+9] [x]);
-                    uint8x16_t prev10 = vld1q_u8(&prev[y+10][x]);
-                    uint8x16_t prev11 = vld1q_u8(&prev[y+11][x]);
-                    uint8x16_t prev12 = vld1q_u8(&prev[y+12][x]);
-                    uint8x16_t prev13 = vld1q_u8(&prev[y+13][x]);
-                    uint8x16_t prev14 = vld1q_u8(&prev[y+14][x]);
-                    uint8x16_t prev15 = vld1q_u8(&prev[y+15][x]);
+                    uint8x16_t prev0  = vld1q_u8(&(prev[y]   [x]));
+                    uint8x16_t prev1  = vld1q_u8(&(prev[y+1] [x]));
+                    uint8x16_t prev2  = vld1q_u8(&(prev[y+2] [x]));
+                    uint8x16_t prev3  = vld1q_u8(&(prev[y+3] [x]));
+                    uint8x16_t prev4  = vld1q_u8(&(prev[y+4] [x]));
+                    uint8x16_t prev5  = vld1q_u8(&(prev[y+5] [x]));
+                    uint8x16_t prev6  = vld1q_u8(&(prev[y+6] [x]));
+                    uint8x16_t prev7  = vld1q_u8(&(prev[y+7] [x]));
+                    uint8x16_t prev8  = vld1q_u8(&(prev[y+8] [x]));
+                    uint8x16_t prev9  = vld1q_u8(&(prev[y+9] [x]));
+                    uint8x16_t prev10 = vld1q_u8(&(prev[y+10][x]));
+                    uint8x16_t prev11 = vld1q_u8(&(prev[y+11][x]));
+                    uint8x16_t prev12 = vld1q_u8(&(prev[y+12][x]));
+                    uint8x16_t prev13 = vld1q_u8(&(prev[y+13][x]));
+                    uint8x16_t prev14 = vld1q_u8(&(prev[y+14][x]));
+                    uint8x16_t prev15 = vld1q_u8(&(prev[y+15][x]));
 
                     /* Compute the Sum */
                     uint8x16_t sum = vaddq_u8(vabdq_u8(curr0, prev0), vabdq_u8(curr1,prev1));
