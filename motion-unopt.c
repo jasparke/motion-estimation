@@ -72,6 +72,7 @@ png_bytepp loadImageFromPNG(char *png_file_name, int * width, int * height) {
 }
 
 int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
+    clock_t begin = clock();
 
     const int numBlocksX = width / BLOCK_SIZE;
     const int numBlocksY = height / BLOCK_SIZE;
@@ -171,13 +172,15 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
         y += BLOCK_SIZE;
     }
 
+    float ttc = (float)(clock() - begin) / CLOCKS_PER_SEC;
+
     for (int j = 0; j < numBlocksY; j++) {
         for (int i = 0; i < numBlocksX; i++) {
-            printf("%d, %d | %d | %d | %d\n", i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
+            printf("BLOCK %d @ [%02d, %02d]: SAD %d with motion (% 02d, % 02d)\n", j*numBlocksY +i, i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
         }
     }
-    return 1;
 
+    printf("Completed in %f.\n");
 }
 
 /* Reads and prints a very very basic greyscale representation of the image. */

@@ -209,6 +209,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     }
 
     float ttc = (float)(clock() - begin) / CLOCKS_PER_SEC;
+
     
     /* Strictly for printing SAD output. */
     for (int j = 0; j < numBlocksY; j++) {
@@ -216,6 +217,8 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             printf("BLOCK %d @ [%02d, %02d]: SAD %d with motion (% 02d, % 02d)\n", j*numBlocksY + i, i, j, minimumSAD[j][i], motionVectorR[j][i],motionVectorS[j][i]);
         }
     }
+    
+    printf("Completed in %f.\n");
 }
 
 /* Reads and prints a very very basic greyscale representation of the image. */
