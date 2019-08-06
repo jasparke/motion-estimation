@@ -30,13 +30,13 @@ static void fatal_error (const char * message, ...) {
 }
 
 int main (int argc, char **argv) {
-    // if (argc < 2) fatal_error("Usage: ./motion FIRST_FRAME.PNG SECOND_FRAME.PNG");
+    if (argc < 2) fatal_error("Usage: ./motion FIRST_FRAME.PNG SECOND_FRAME.PNG");
     
     int height, width, cheight, cwidth;
-    // png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
-    // png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
-    png_bytep * initial = loadImageFromPNG("images/busy.png", &width, &height);
-    png_bytep * current = loadImageFromPNG("images/busy-shift.png", &cwidth, &cheight);
+    png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
+    png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
+    // png_bytep * initial = loadImageFromPNG("images/busy.png", &width, &height);
+    // png_bytep * current = loadImageFromPNG("images/busy-shift.png", &cwidth, &cheight);
     
     if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
