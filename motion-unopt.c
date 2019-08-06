@@ -17,7 +17,7 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height);
 void testImageRead(png_bytepp image, int height, int width);
 
 #define BLOCK_SIZE 16
-#define SEARCH_AREA 32
+#define SEARCH_AREA 16
 
 
 static void fatal_error (const char * message, ...) {
@@ -154,7 +154,7 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
                         min_mX = r;
                         min_mY = s;
                         // printf("\n\t\t!!!!New minSAD: %d at (%d,%d)\n", minSAD, r, s);
-                        printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",xBlock, yBlock, r, s, SAD);
+                        // printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",xBlock, yBlock, r, s, SAD);
 
                     }
 
@@ -171,11 +171,9 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
         y += BLOCK_SIZE;
     }
 
-
-    // printf("BLOCK# | minSAD | mvec[r] | mvec[s]\n");
     for (int j = 0; j < numBlocksY; j++) {
         for (int i = 0; i < numBlocksX; i++) {
-            // printf("%d, %d | %d | %d | %d\n", i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
+            printf("%d, %d | %d | %d | %d\n", i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
         }
     }
     return 1;

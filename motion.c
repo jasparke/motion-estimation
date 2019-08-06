@@ -21,8 +21,6 @@ void testImageRead(png_bytepp image, int height, int width);
 #define BLOCK_SIZE 16
 #define SEARCH_BOUND 16
 
-#define DEBUG
-
 
 static void fatal_error (const char * message, ...) {
     va_list args;
@@ -78,6 +76,8 @@ png_bytepp loadImageFromPNG(char *png_file_name, int * width, int * height) {
 
 
 int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
+    clock_t begin = clock();
+
     int numBlocksX = width / BLOCK_SIZE;
     int numBlocksY = height / BLOCK_SIZE;
 
@@ -199,13 +199,22 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                         minimumSAD[blockY][blockX] = SAD;
                         motionVectorR[blockY][blockX] = r;
                         motionVectorS[blockY][blockX] = s;
-                        printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",blockX, blockY, r, s, SAD);
+                        // printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",blockX, blockY, r, s, SAD);
                     }
                 }
             }
             x += BLOCK_SIZE;
         }
         y += BLOCK_SIZE;
+    }
+
+    float ttc = (float)(clock() - begin) / CLOCKS_PER_SEC;
+    
+    /* Strictly for printing SAD output. */
+    for (int j = 0; j < numBlocksY; j++) {
+        for (int i = 0; i < numBlocksX; i++) {
+            printf("BLOCK %d @ [%02d, %02d]: SAD %d with motion (% 02d, % 02d)\n", j*numBlocksY + i, i, j, minimumSAD[j][i], motionVectorR[j][i],motionVectorS[j][i]);
+        }
     }
 }
 
