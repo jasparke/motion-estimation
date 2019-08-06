@@ -88,9 +88,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     motionVectorS = calloc(numBlocksY, sizeof(int*));
     minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
     for (int i = 0; i < numBlocksY; i++) {
-        motionVectorR = calloc(numBlocksX, sizeof(int));
-        motionVectorS = calloc(numBlocksX, sizeof(int));
-        minimumSAD    = calloc(numBlocksX, sizeof(uint16_t));
+        motionVectorR[i] = calloc(numBlocksX, sizeof(int));
+        motionVectorS[i] = calloc(numBlocksX, sizeof(int));
+        minimumSAD[i]    = calloc(numBlocksX, sizeof(uint16_t));
     }
 
     register uint16_t SAD;
