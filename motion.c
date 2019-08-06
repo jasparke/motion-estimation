@@ -229,7 +229,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
 }
 
 
-void sumAbsoluteDifferences(uint16_t * SAD, uint8x16_t * curr, uint8x16_t * prev, int offset) {
+void sumAbsoluteDifferences(uint16_t * SAD, uint8x16_t * curr, uint8x16_t * prev) {
        /* Compute the Sum in 3 steps: 
         * vapdq_u8: Compute the absdifference of elements in curr & prev. Return uint8x16_t.
         * vpaddlq_u8: Pairwise additon to transform to u16 from u8 to prevent overflow. Return uint16x8_t.
