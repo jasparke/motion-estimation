@@ -41,10 +41,6 @@ int main (int argc, char **argv) {
     
     if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
-    #ifdef DEBUG
-        printf("DEBUG: Loaded both PNGs, entering motion function...\n");
-    #endif
-
     motion(initial, current, width, height);
     // testImageRead(initial, height, width);
     // testImageRead(current, height, width);
@@ -85,11 +81,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     int numBlocksX = width / BLOCK_SIZE;
     int numBlocksY = height / BLOCK_SIZE;
 
-    
-    #ifdef DEBUG
-        printf("DEBUG: Starting memory assignment for minsad & motion vectors...\n");
-    #endif
-
     /* Pretty sure this initialization causes the segfault.... */
     // int  ** motionVectorR;
     // int  ** motionVectorS;
@@ -111,11 +102,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     memset(motionVectorR, 0, numBlocksX * numBlocksY * sizeof(int));
     memset(motionVectorS, 0, numBlocksX * numBlocksY * sizeof(int));
 
-    
-    #ifdef DEBUG
-        printf("DEBUG: Passed memset. minSad: %d, motionR: %d, motionV %d\n", sizeof(minimumSAD), sizeof(motionVectorR), sizeof(motionVectorS));
-    #endif
-
     register uint16_t SAD;
     // register int diff;
 
@@ -123,15 +109,8 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     int y = 0;
     /* Each block is processed in turn, by row. */
     for (int blockY = 0; blockY < numBlocksY; blockY) {
-        #ifdef DEBUG
-            printf("DEBUG: for blockY (%d) loop \n", blockY);
-        #endif
-
         x = 0;
         for (int blockX = 0; blockX < numBlocksX; blockX) {
-            #ifdef DEBUG
-                printf("DEBUG:\t for blockX (%d) loop \n", blockX);
-            #endif
             /* Load each row of the block into a vector */
             uint8x16_t curr0  = vld1q_u8(&(curr[y]   [x]));
             uint8x16_t curr1  = vld1q_u8(&(curr[y+1] [x]));
@@ -149,10 +128,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             uint8x16_t curr13 = vld1q_u8(&(curr[y+13][x]));
             uint8x16_t curr14 = vld1q_u8(&(curr[y+14][x]));
             uint8x16_t curr15 = vld1q_u8(&(curr[y+15][x]));
-            #ifdef DEBUG
-                printf("DEBUG: \t Loaded current image into uint8x16_ts\n");
-            #endif
-
+            
             /* Adjust the bounds for motion vectors to account for edges */
             int sLow  = (blockY == 0) ? 0 : -SEARCH_BOUND;
             int rLow  = (blockX == 0) ? 0 : -SEARCH_BOUND;
@@ -163,9 +139,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             for (int s = sLow; s < sHigh; s++) {
                 for (int r = rLow; r < rHigh; r++) {
 
-                    #ifdef DEBUG
-                        printf("DEBUG: \t\t SAD Search Prev-load (%d,%d)\n", r,s);
-                    #endif
                     /* Load a shifted version of the block for computing the SAD */
                     /* FUTURE: Optimize this to not reload pixels that are used multiple times. 
                      * Change prev to an array and cycle through it. */
@@ -192,10 +165,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                      * vaddq_u16: Computes the sum of all rows abs differences.
                      */
 
-                    #ifdef DEBUG
-                        printf("DEBUG: \t\t SAD Search absdiff\n");
-                    #endif
-
                     uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr1,prev1));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1, prev1)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2, prev2)));
@@ -213,9 +182,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
-                    #ifdef DEBUG
-                        printf("DEBUG: \t\t SAD Summing\n");
-                    #endif
                     /* Sum the resultant vector elements */
                     SAD = vgetq_lane_u16(sum, 0);
                     SAD = vgetq_lane_u16(sum, 1);
@@ -230,8 +196,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                         minimumSAD[blockY][blockX] = SAD;
                         motionVectorR[blockY][blockX] = r;
                         motionVectorS[blockY][blockX] = s;
-
-                        printf("Found new min SAD for block [%02d,%02d] = %d @ (%02d, %02d)\n",blockX, blockY, SAD, r, s);
+                        #ifdef DEBUG
+                            printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",blockX, blockY, r, s, SAD);
+                        #endif
                     }
                 }
             }
