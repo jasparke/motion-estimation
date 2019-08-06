@@ -117,6 +117,23 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             uint8x16_t curr13 = vld1q_u8(&(curr[y+13][x]));
             uint8x16_t curr14 = vld1q_u8(&(curr[y+14][x]));
             uint8x16_t curr15 = vld1q_u8(&(curr[y+15][x]));
+
+            uint8x16_t prev0  = vld1q_u8(&(prev[y]   [x]));
+            uint8x16_t prev1  = vld1q_u8(&(prev[y+1] [x]));
+            uint8x16_t prev2  = vld1q_u8(&(prev[y+2] [x]));
+            uint8x16_t prev3  = vld1q_u8(&(prev[y+3] [x]));
+            uint8x16_t prev4  = vld1q_u8(&(prev[y+4] [x]));
+            uint8x16_t prev5  = vld1q_u8(&(prev[y+5] [x]));
+            uint8x16_t prev6  = vld1q_u8(&(prev[y+6] [x]));
+            uint8x16_t prev7  = vld1q_u8(&(prev[y+7] [x]));
+            uint8x16_t prev8  = vld1q_u8(&(prev[y+8] [x]));
+            uint8x16_t prev9  = vld1q_u8(&(prev[y+9] [x]));
+            uint8x16_t prev10 = vld1q_u8(&(prev[y+10][x]));
+            uint8x16_t prev11 = vld1q_u8(&(prev[y+11][x]));
+            uint8x16_t prev12 = vld1q_u8(&(prev[y+12][x]));
+            uint8x16_t prev13 = vld1q_u8(&(prev[y+13][x]));
+            uint8x16_t prev14 = vld1q_u8(&(prev[y+14][x]));
+            uint8x16_t prev15 = vld1q_u8(&(prev[y+15][x]));
             
             /* Adjust the bounds for motion vectors to account for edges */
             int sLow  = (blockY == 0) ? 0 : -SEARCH_BOUND;
@@ -124,22 +141,22 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             int sHigh = (blockY == numBlocksY - 1) ? 0 : SEARCH_BOUND;
             int rHigh = (blockX == numBlocksX - 1) ? 0 : SEARCH_BOUND;
 
-            uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr0,  &(prev[y+s][x+r])));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  &(prev[y+s+1][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  &(prev[y+s+2][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3,  &(prev[y+s+3][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4,  &(prev[y+s+4][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5,  &(prev[y+s+5][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6,  &(prev[y+s+6][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7,  &(prev[y+s+7][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8,  &(prev[y+s+8][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9,  &(prev[y+s+9][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, &(prev[y+s+10][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, &(prev[y+s+11][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, &(prev[y+s+12][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, &(prev[y+s+13][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, &(prev[y+s+14][x+r]))));
-            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, &(prev[y+s+15][x+r]))));
+            uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr0,  prev0));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  prev1)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  prev2)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3,  prev3)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4,  prev4)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5,  prev5)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6,  prev6)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7,  prev7)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8,  prev8)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9,  prev9)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, prev10)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, prev11)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, prev12)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, prev13)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
             if (SAD < minimumSAD[blockY][blockX]) {
                 minimumSAD[blockY][blockX] = SAD;
@@ -165,22 +182,22 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     /* FUTURE: Optimize this to not reload pixels that are used multiple times. 
                      * Change prev to an array and cycle through it. */
 
-                    // uint8x16_t prev0  = vld1q_u8(&(prev[y]   [x]));
-                    // uint8x16_t prev1  = vld1q_u8(&(prev[y+1] [x]));
-                    // uint8x16_t prev2  = vld1q_u8(&(prev[y+2] [x]));
-                    // uint8x16_t prev3  = vld1q_u8(&(prev[y+3] [x]));
-                    // uint8x16_t prev4  = vld1q_u8(&(prev[y+4] [x]));
-                    // uint8x16_t prev5  = vld1q_u8(&(prev[y+5] [x]));
-                    // uint8x16_t prev6  = vld1q_u8(&(prev[y+6] [x]));
-                    // uint8x16_t prev7  = vld1q_u8(&(prev[y+7] [x]));
-                    // uint8x16_t prev8  = vld1q_u8(&(prev[y+8] [x]));
-                    // uint8x16_t prev9  = vld1q_u8(&(prev[y+9] [x]));
-                    // uint8x16_t prev10 = vld1q_u8(&(prev[y+10][x]));
-                    // uint8x16_t prev11 = vld1q_u8(&(prev[y+11][x]));
-                    // uint8x16_t prev12 = vld1q_u8(&(prev[y+12][x]));
-                    // uint8x16_t prev13 = vld1q_u8(&(prev[y+13][x]));
-                    // uint8x16_t prev14 = vld1q_u8(&(prev[y+14][x]));
-                    // uint8x16_t prev15 = vld1q_u8(&(prev[y+15][x]));
+                    prev0  = vld1q_u8(&(prev[y]   [x]));
+                    prev1  = vld1q_u8(&(prev[y+1] [x]));
+                    prev2  = vld1q_u8(&(prev[y+2] [x]));
+                    prev3  = vld1q_u8(&(prev[y+3] [x]));
+                    prev4  = vld1q_u8(&(prev[y+4] [x]));
+                    prev5  = vld1q_u8(&(prev[y+5] [x]));
+                    prev6  = vld1q_u8(&(prev[y+6] [x]));
+                    prev7  = vld1q_u8(&(prev[y+7] [x]));
+                    prev8  = vld1q_u8(&(prev[y+8] [x]));
+                    prev9  = vld1q_u8(&(prev[y+9] [x]));
+                    prev10 = vld1q_u8(&(prev[y+10][x]));
+                    prev11 = vld1q_u8(&(prev[y+11][x]));
+                    prev12 = vld1q_u8(&(prev[y+12][x]));
+                    prev13 = vld1q_u8(&(prev[y+13][x]));
+                    prev14 = vld1q_u8(&(prev[y+14][x]));
+                    prev15 = vld1q_u8(&(prev[y+15][x]));
 
                     /* Compute the Sum in 3 steps: 
                      * vapdq_u8: Compute the absdifference of elements in curr & prev. Return uint8x16_t.
@@ -188,22 +205,22 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                      * vaddq_u16: Computes the sum of all rows abs differences.
                      */
 
-                    sum = vpaddlq_u8(vabdq_u8(curr0,  &(prev[y+s][x+r])));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  &(prev[y+s+1][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  &(prev[y+s+2][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3,  &(prev[y+s+3][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4,  &(prev[y+s+4][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5,  &(prev[y+s+5][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6,  &(prev[y+s+6][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7,  &(prev[y+s+7][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8,  &(prev[y+s+8][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9,  &(prev[y+s+9][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, &(prev[y+s+10][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, &(prev[y+s+11][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, &(prev[y+s+12][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, &(prev[y+s+13][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, &(prev[y+s+14][x+r]))));
-                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, &(prev[y+s+15][x+r]))));
+                    sum = vpaddlq_u8(vabdq_u8(curr0,  prev0));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  prev1)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  prev2)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3,  prev3)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4,  prev4)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5,  prev5)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6,  prev6)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7,  prev7)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8,  prev8)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9,  prev9)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, prev10)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, prev11)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, prev12)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, prev13)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
                     // uint16x8_t     sum0 = vpaddlq_u8(vabdq_u8(curr0, &(prev[y][x])));
                     // uint16x8_t     sum1 = vpaddlq_u8(vabdq_u8(curr1, &(prev[y+1][x])));
