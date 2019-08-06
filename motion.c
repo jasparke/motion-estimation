@@ -11,13 +11,15 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
+#include <arm_neon.h>
 
 png_bytepp loadImageFromPNG(char* png_file_name, int * width, int * height);
 int motion(png_bytepp prev, png_bytepp curr, int width, int height);
+int motion_unopt(png_bytepp prev, png_bytepp curr, int width, int height);
 void testImageRead(png_bytepp image, int height, int width);
 
 #define BLOCK_SIZE 16
-#define SEARCH_AREA 32
+#define SEARCH_BOUND 16
 
 
 static void fatal_error (const char * message, ...) {
@@ -35,13 +37,14 @@ int main (int argc, char **argv) {
     png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
     png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
     
-    // if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
+    if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
     motion(initial, current, width, height);
     // testImageRead(initial, height, width);
     // testImageRead(current, height, width);
 }
 
+/** Will remain unoptimized.  */
 png_bytepp loadImageFromPNG(char *png_file_name, int * width, int * height) {
     FILE *imageFile = fopen(png_file_name, "rb");
     if (!imageFile) fatal_error("ERROR: Unable to open file %s.", png_file_name);
@@ -71,47 +74,139 @@ png_bytepp loadImageFromPNG(char *png_file_name, int * width, int * height) {
     return image;
 }
 
-int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
 
-    const int numBlocksX = width / BLOCK_SIZE;
-    const int numBlocksY = height / BLOCK_SIZE;
+int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
+    int numBlocksX = width / BLOCK_SIZE;
+    int numBlocksY = height / BLOCK_SIZE;
+
+    uint8_t  ** motionVectorR;
+    uint8_t  ** motionVectorS;
+
+    /* IDK if this would make a difference, but only need 12 bits to store SAD worst case */
+    uint16_t ** minimumSAD;
+
+    motionVectorR = calloc(numBlocksY, sizeof(int*));
+    motionVectorS = calloc(numBlocksY, sizeof(int*));
+    minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
+
+    for (int i = 0; i < numBlocksY; i++) {
+        motionVectorR = calloc(numBlocksX, sizeof(uint8_t));
+        motionVectorS = calloc(numBlocksX, sizeof(uint8_t));
+        minimumSAD    = calloc(numBlocksX, sizeof(uint8_t));
+    }
+
+    register uint16_t SAD;
+    // register int diff;
+
+    int x = 0;
+    int y = 0;
+    /* Each block is processed in turn, by row. */
+    for (int blockY = 0; blockY < numBlocksY; blockY) {
+        x = 0;
+        for (int blockX = 0; blockX < numBlocksX; blockX) {
+
+            /* Load each row of the block into a vector */
+            uint8x16_t curr0  = vld1q_u8(&curr[y]   [x]);
+            uint8x16_t curr1  = vld1q_u8(&curr[y+1] [x]);
+            uint8x16_t curr2  = vld1q_u8(&curr[y+2] [x]);
+            uint8x16_t curr3  = vld1q_u8(&curr[y+3] [x]);
+            uint8x16_t curr4  = vld1q_u8(&curr[y+4] [x]);
+            uint8x16_t curr5  = vld1q_u8(&curr[y+5] [x]);
+            uint8x16_t curr6  = vld1q_u8(&curr[y+6] [x]);
+            uint8x16_t curr7  = vld1q_u8(&curr[y+7] [x]);
+            uint8x16_t curr8  = vld1q_u8(&curr[y+8] [x]);
+            uint8x16_t curr9  = vld1q_u8(&curr[y+9] [x]);
+            uint8x16_t curr10 = vld1q_u8(&curr[y+10][x]);
+            uint8x16_t curr11 = vld1q_u8(&curr[y+11][x]);
+            uint8x16_t curr12 = vld1q_u8(&curr[y+12][x]);
+            uint8x16_t curr13 = vld1q_u8(&curr[y+13][x]);
+            uint8x16_t curr14 = vld1q_u8(&curr[y+14][x]);
+            uint8x16_t curr15 = vld1q_u8(&curr[y+15][x]);
+
+            /* Adjust the bounds for motion vectors to account for edges */
+            int sLow  = (blockY == 0) ? 0 : -SEARCH_BOUND;
+            int rLow  = (blockX == 0) ? 0 : -SEARCH_BOUND;
+            int sHigh = (blockY == numBlocksY - 1) ? 0 : SEARCH_BOUND;
+            int rHigh = (blockX == numBlocksX - 1) ? 0 : SEARCH_BOUND;
+
+            /* Loop through different motion vectors and compute the SAD for each */
+            for (int s = sLow; s < sHigh; s++) {
+                for (int r = rLow; r < rHigh; r++) {
+                    /* Load a shifted version of the block for computing the SAD */
+                    /* FUTURE: Optimize this to not reload pixels that are used multiple times. 
+                     * Change prev to an array and cycle through it. */
+                    uint8x16_t prev0  = vld1q_u8(&prev[y]   [x]);
+                    uint8x16_t prev1  = vld1q_u8(&prev[y+1] [x]);
+                    uint8x16_t prev2  = vld1q_u8(&prev[y+2] [x]);
+                    uint8x16_t prev3  = vld1q_u8(&prev[y+3] [x]);
+                    uint8x16_t prev4  = vld1q_u8(&prev[y+4] [x]);
+                    uint8x16_t prev5  = vld1q_u8(&prev[y+5] [x]);
+                    uint8x16_t prev6  = vld1q_u8(&prev[y+6] [x]);
+                    uint8x16_t prev7  = vld1q_u8(&prev[y+7] [x]);
+                    uint8x16_t prev8  = vld1q_u8(&prev[y+8] [x]);
+                    uint8x16_t prev9  = vld1q_u8(&prev[y+9] [x]);
+                    uint8x16_t prev10 = vld1q_u8(&prev[y+10][x]);
+                    uint8x16_t prev11 = vld1q_u8(&prev[y+11][x]);
+                    uint8x16_t prev12 = vld1q_u8(&prev[y+12][x]);
+                    uint8x16_t prev13 = vld1q_u8(&prev[y+13][x]);
+                    uint8x16_t prev14 = vld1q_u8(&prev[y+14][x]);
+                    uint8x16_t prev15 = vld1q_u8(&prev[y+15][x]);
+
+                    /* Compute the Sum */
+                    uint8x16_t sum = vaddq_u8(vabdq_u8(curr0, prev0), vabdq_u8(curr1,prev1));
+                    sum = vaddq_u8(sum, vabdq_u8(curr1, prev1));
+                    sum = vaddq_u8(sum, vabdq_u8(curr2, prev2));
+                    sum = vaddq_u8(sum, vabdq_u8(curr3, prev3));
+                    sum = vaddq_u8(sum, vabdq_u8(curr4, prev4));
+                    sum = vaddq_u8(sum, vabdq_u8(curr5, prev5));
+                    sum = vaddq_u8(sum, vabdq_u8(curr6, prev6));
+                    sum = vaddq_u8(sum, vabdq_u8(curr7, prev7));
+                    sum = vaddq_u8(sum, vabdq_u8(curr8, prev8));
+                    sum = vaddq_u8(sum, vabdq_u8(curr9, prev9));
+                    sum = vaddq_u8(sum, vabdq_u8(curr10, prev10));
+                    sum = vaddq_u8(sum, vabdq_u8(curr11, prev11));
+                    sum = vaddq_u8(sum, vabdq_u8(curr12, prev12));
+                    sum = vaddq_u8(sum, vabdq_u8(curr13, prev13));
+                    sum = vaddq_u8(sum, vabdq_u8(curr14, prev14));
+                    sum = vaddq_u8(sum, vabdq_u8(curr15, prev15));
+
+                    /* get the values for sum */
+                    for (int i = 0; i < BLOCK_SIZE; i+=4) {
+                        SAD += vgetq_lane_u8(sum, i);
+                        SAD += vgetq_lane_u8(sum, i+1);
+                        SAD += vgetq_lane_u8(sum, i+2);
+                        SAD += vgetq_lane_u8(sum, i+3);
+                    }
+
+                    if (SAD < minimumSAD[blockY][blockX]) {
+                        minimumSAD[blockY][blockX] = SAD;
+                        motionVectorR[blockY][blockX] = r;
+                        motionVectorS[blockY][blockX] = s;
+                    }
+                }
+            }
+            x += BLOCK_SIZE;
+        }
+        y += BLOCK_SIZE;
+    }
+}
+
+int motion_unopt(png_bytepp prev, png_bytepp curr, int width, int height) {
+
+
+    int numBlocksX = width / BLOCK_SIZE;
+    int numBlocksY = height / BLOCK_SIZE;
 
     register int diff;
     register int SAD;
     register int r;
     register int s;
 
-    // int **SADResults = calloc(BLOCK_SIZE, sizeof(int) * BLOCK_SIZE);
-    // int ***MVECResults = calloc(BLOCK_SIZE*2, sizeof(int) * BLOCK_SIZE*2);
-
     int SADResults[numBlocksY][numBlocksX];
     int MVECResults[numBlocksY][numBlocksX][2];
     memset(SADResults, 0, numBlocksX * numBlocksY * sizeof(int));
     memset(MVECResults, 0, numBlocksX * numBlocksY * 2 * sizeof(int));
     
-    
-    /*
-     * Check the 8 surrounding blocks of the image to determine which block matches best.
-     * For example, for block X, all # blocks would be checked:
-     *  0 1 2 3 4 5
-     *  * * * * * * 0
-     *  * # # # * * 1
-     *  * # X # * * 2
-     *  * # # # * * 3
-     *  * * * * * * 4
-     *  * * * * * * 5
-     */
-
-    // const int block_displacement[8][2] = {
-    //     {-1, -1}, {0, -1}, {1, -1},
-    //     {-1, 0}, /* 0, 0 */ {1, 0},
-    //     {-1, 1},   {0, 1},  {1, 1}
-    // };
-    // int pixel_displacement[8][2] = {
-    //     {-16, -16}, {0, -16},  {16, -16},
-    //     {-16, 0},  /* 0, 0 */ {16, 0},
-    //     {-16, 16},  {0, 16},  {16, 16}
-    // };
 
     int x = 0;
     int y = 0;
