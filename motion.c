@@ -190,9 +190,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
              * This can likely be sped up by "snaking" outwards from initial block.
              **/
             for (;s < sHigh;s++) {
-                if (s == 0) continue;
                 for (;r < rHigh;r++) {
-                    if (r == 0) continue;
+                    if (r == 0 && s == 0) continue;
+                        /* SAD OPERATION */
 
                     /* Load a shifted version of the block for computing the SAD */
                     /* FUTURE: Optimize this to not reload pixels that are used multiple times. 
