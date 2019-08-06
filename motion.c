@@ -192,7 +192,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     SAD = vgetq_lane_u16(sum, 5);
                     SAD = vgetq_lane_u16(sum, 6);
                     SAD = vgetq_lane_u16(sum, 7);
-                    printf("post-sum(%d,%d,%d,%d): %d\n"blockX,blockY,r,s,SAD);
+                    printf("post-sum(%d,%d,%d,%d): %d\n",blockX,blockY,r,s,SAD);
 
                     if (SAD < minimumSAD[blockY][blockX]) {
                         minimumSAD[blockY][blockX] = SAD;
