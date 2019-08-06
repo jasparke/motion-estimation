@@ -193,13 +193,17 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     SAD = vgetq_lane_u16(sum, 5);
                     SAD = vgetq_lane_u16(sum, 6);
                     SAD = vgetq_lane_u16(sum, 7);
-                    // printf("post-sum(%d,%d,%d,%d): %d\n",blockX,blockY,r,s,SAD);
 
                     if (SAD < minimumSAD[blockY][blockX]) {
                         minimumSAD[blockY][blockX] = SAD;
                         motionVectorR[blockY][blockX] = r;
                         motionVectorS[blockY][blockX] = s;
-                        // printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",blockX, blockY, r, s, SAD);
+                        
+                        /* If we have an exact match, we are done this block. */
+                        if (SAD == 0) {
+                            s = SEARCH_BOUND + 1;
+                            r = SEARCH_BOUND + 1;
+                        }
                     }
                 }
             }
@@ -217,7 +221,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             printf("BLOCK %d @ [%02d, %02d]: SAD %d with motion (% 02d, % 02d)\n", j*numBlocksY + i, i, j, minimumSAD[j][i], motionVectorR[j][i],motionVectorS[j][i]);
         }
     }
-    
+
     printf("Completed in %f.\n");
 }
 
