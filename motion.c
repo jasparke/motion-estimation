@@ -98,13 +98,14 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     for (int blockY = 0; blockY < numBlocksY; blockY++) {
         x = 0;
         for (int blockX = 0; blockX < numBlocksX; blockX++) {
-            int r = 0; int s = 0;
 
             /* Adjust the bounds for motion vectors to account for edges */
             int sLow  = (blockY == 0) ? 0 : -SEARCH_BOUND;
             int rLow  = (blockX == 0) ? 0 : -SEARCH_BOUND;
             int sHigh = (blockY == numBlocksY - 1) ? 0 : SEARCH_BOUND;
             int rHigh = (blockX == numBlocksX - 1) ? 0 : SEARCH_BOUND;
+
+            int r = rLow; int s = sLow;
 
             /* Load each row of the block into a vector */
             uint8x16_t curr0  = vld1q_u8(&(curr[y]   [x]));
@@ -175,9 +176,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             /* Loop through different motion vectors and compute the SAD for each
              * This can likely be sped up by "snaking" outwards from initial block.
              **/
-            for (s = sLow; s < sHigh; s++) {
+            for (; s < sHigh; s++) {
                 if (s == 0) continue;
-                for (r = rLow; r < rHigh; r++) {
+                for (; r < rHigh; r++) {
                     if (r == 0) continue;
 
                     /* Load a shifted version of the block for computing the SAD */
