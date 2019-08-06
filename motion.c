@@ -80,18 +80,25 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     int numBlocksY = height / BLOCK_SIZE;
 
     /* Pretty sure this initialization causes the segfault.... */
-    int  ** motionVectorR;
-    int  ** motionVectorS;
-    uint16_t ** minimumSAD;
+    // int  ** motionVectorR;
+    // int  ** motionVectorS;
+    // uint16_t ** minimumSAD;
 
-    motionVectorR = calloc(numBlocksY, sizeof(int*));
-    motionVectorS = calloc(numBlocksY, sizeof(int*));
-    minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
-    for (int i = 0; i < numBlocksY; i++) {
-        motionVectorR[i] = calloc(numBlocksX, sizeof(int));
-        motionVectorS[i] = calloc(numBlocksX, sizeof(int));
-        minimumSAD[i]    = calloc(numBlocksX, sizeof(uint16_t));
-    }
+    // motionVectorR = calloc(numBlocksY, sizeof(int*));
+    // motionVectorS = calloc(numBlocksY, sizeof(int*));
+    // minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
+    // for (int i = 0; i < numBlocksY; i++) {
+    //     motionVectorR[i] = calloc(numBlocksX, sizeof(int));
+    //     motionVectorS[i] = calloc(numBlocksX, sizeof(int));
+    //     minimumSAD[i]    = calloc(numBlocksX, sizeof(uint16_t));
+    // }
+
+    uint16_t minimumSAD[numBlocksY][numBlocksX];
+    int motionVectorR[numBlocksY][numBlocksX];
+    int motionVectorS[numBlocksY][numBlocksX];
+    memset(minimumSAD, 0, numBlocksX * numBlocksY * sizeof(uint16_t));
+    memset(motionVectorR, 0, numBlocksX * numBlocksY * sizeof(int));
+    memset(motionVectorS, 0, numBlocksX * numBlocksY * sizeof(int));
 
     register uint16_t SAD;
     // register int diff;
@@ -187,7 +194,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                         motionVectorR[blockY][blockX] = r;
                         motionVectorS[blockY][blockX] = s;
 
-                        printf("Found new min SAD (%02d,%02d) of %d\n", r, s, SAD);
+                        printf("Found new min SAD for block [%02d,%02d] = %d @ (%02d, %02d)\n",blockX, blockY, SAD, r, s);
                     }
                 }
             }

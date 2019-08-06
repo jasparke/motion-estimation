@@ -154,8 +154,8 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
                         min_mX = r;
                         min_mY = s;
                         // printf("\n\t\t!!!!New minSAD: %d at (%d,%d)\n", minSAD, r, s);
+                        printf("Found new min SAD for block [%02d,%02d] = %d @ (%02d, %02d)\n",xBlock, yBlock, SAD, r, s);
 
-                        printf("Found new min SAD (%02d,%02d) of %d\n", r, s, SAD);
                     }
 
                 }
