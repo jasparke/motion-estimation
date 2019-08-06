@@ -182,7 +182,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
-                    printf("pre-sum...");
                     /* Sum the resultant vector elements */
                     SAD = vgetq_lane_u16(sum, 0);
                     SAD = vgetq_lane_u16(sum, 1);
@@ -198,9 +197,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                         minimumSAD[blockY][blockX] = SAD;
                         motionVectorR[blockY][blockX] = r;
                         motionVectorS[blockY][blockX] = s;
-                        #ifdef DEBUG
-                            printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",blockX, blockY, r, s, SAD);
-                        #endif
+                        printf("Found new min SAD for block [%02d,%02d]: (%02d, %02d) = %d \n",blockX, blockY, r, s, SAD);
                     }
                 }
             }
