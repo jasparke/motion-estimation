@@ -90,8 +90,8 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
 
     for (int i = 0; i < numBlocksY; i++) {
-        motionVectorR = calloc(numBlocksX, sizeof(uint8_t));
-        motionVectorS = calloc(numBlocksX, sizeof(uint8_t));
+        motionVectorR = calloc(numBlocksX, sizeof(int));
+        motionVectorS = calloc(numBlocksX, sizeof(int));
         minimumSAD    = calloc(numBlocksX, sizeof(uint8_t));
     }
 
@@ -188,6 +188,8 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                         minimumSAD[blockY][blockX] = SAD;
                         motionVectorR[blockY][blockX] = r;
                         motionVectorS[blockY][blockX] = s;
+
+                        printf("Found new min SAD (%02d,%02d) of %d\n");
                     }
                 }
             }
