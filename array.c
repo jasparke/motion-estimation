@@ -16,7 +16,7 @@
 
 png_bytepp loadImageFromPNG(char* png_file_name, int * width, int * height);
 int motion(png_bytepp prev, png_bytepp curr, int width, int height);
-void sumAbsoluteDifferences(uint16_t * SAD, uint8x16_t * curr, uint8x16_t * prev);
+void sumAbsoluteDifferences(uint16_t * SAD, uint8x16_t * curr, uint8x16_t * prev, int offset);
 
 #define BLOCK_SIZE 16
 #define SEARCH_BOUND 16
@@ -36,8 +36,6 @@ int main (int argc, char **argv) {
     int height, width, cheight, cwidth;
     png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
     png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
-    // png_bytep * initial = loadImageFromPNG("images/busy.png", &width, &height);
-    // png_bytep * current = loadImageFromPNG("images/busy-shift.png", &cwidth, &cheight);
     
     if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
@@ -115,6 +113,8 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             uint8x16_t  *prevRows;
             curr = malloc(BLOCK_SIZE * sizeof(uint8x16_t));
 
+            int offset = 0;
+
             /* Load each row of the block into a vector */
             currRows[0]   = vld1q_u8(&(curr[y]   [x]));
             currRows[1]   = vld1q_u8(&(curr[y+1] [x]));
@@ -151,7 +151,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             prevRows[14]  = vld1q_u8(&(prev[y+14][x]));
             prevRows[15]  = vld1q_u8(&(prev[y+15][x]));
             
-            sumAbsoluteDifferences(&SAD, currRows, prevRows);
+            /* Compute SAD for identical block position in frame */
+
+            sumAbsoluteDifferences(&SAD, currRows, prevRows, offset);
 
             if (SAD < minimumSAD[blockY][blockX]) {
                 minimumSAD[blockY][blockX] = SAD;
@@ -168,15 +170,16 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             /* Loop through different motion vectors and compute the SAD for each
              * This can likely be sped up by "snaking" outwards from initial block.
              **/
-            for (;s < sHigh;s++) {
-                if (s == 0) continue;
-                for (;r < rHigh;r++) {
-                    if (r == 0) continue;
-
-                    /* Load a shifted version of the block for computing the SAD */
-                    /* FUTURE: Optimize this to not reload pixels that are used multiple times. 
-                     * Change prev to an array and cycle through it. */
-
+            for (;r < rHigh;r++) {
+                if (r == 0) continue;
+                    /* Load a shifted version of the block for computing the SAD
+                     *
+                     * if we progress row by row for a given r value (read: static x pos), we only 
+                     * need to read each subsequent row for the SAD operation, replacing the top-most vectors
+                     * 
+                     * Initially load the top of the s chain.
+                     **/
+                    offset = 0;
                     prevRows[0]   = vld1q_u8(&(prev[y+s]   [x+r]));
                     prevRows[1]   = vld1q_u8(&(prev[y+s+1] [x+r]));
                     prevRows[2]   = vld1q_u8(&(prev[y+s+2] [x+r]));
@@ -194,8 +197,12 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     prevRows[14]  = vld1q_u8(&(prev[y+s+14][x+r]));
                     prevRows[15]  = vld1q_u8(&(prev[y+s+15][x+r]));
 
-                    sumAbsoluteDifferences(&SAD, currRows, prevRows);
+                for (;s < sHigh - 1;s++) {
+                    if (s == 0) continue;
+                    sumAbsoluteDifferences(&SAD, currRows, prevRows, offset);
                     
+                    /* Load the next row for shift s */
+                    prevRows[++offset] = vld1q_u8(&(prev[y+s+15][x+r]));
 
                     if (SAD < minimumSAD[blockY][blockX]) {
                         minimumSAD[blockY][blockX] = SAD;
@@ -227,7 +234,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
 
     printf("Completed in %f.\n", ttc);
 }
-
 
 void sumAbsoluteDifferences(uint16_t * SAD, uint8x16_t * curr, uint8x16_t * prev, int offset) {
        /* Compute the Sum in 3 steps: 
