@@ -84,7 +84,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     /* TODO: need to benchmark these two initializations and see whats faster. Won't impact actual runtime, just curious */
     int  ** motionVectorR;
     int  ** motionVectorS;
-    uint16_t ** minimumSAD;
+    // uint16_t ** minimumSAD;
 
     motionVectorR = calloc(numBlocksY, sizeof(int*));
     motionVectorS = calloc(numBlocksY, sizeof(int*));
