@@ -16,8 +16,6 @@
 
 png_bytepp loadImageFromPNG(char* png_file_name, int * width, int * height);
 int motion(png_bytepp prev, png_bytepp curr, int width, int height);
-// int motion_unopt(png_bytepp prev, png_bytepp curr, int width, int height);
-void testImageRead(png_bytepp image, int height, int width);
 
 #define BLOCK_SIZE 16
 #define SEARCH_BOUND 16
@@ -41,8 +39,6 @@ int main (int argc, char **argv) {
     if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
     motion(initial, current, width, height);
-    // testImageRead(initial, height, width);
-    // testImageRead(current, height, width);
 }
 
 /** Will remain unoptimized.  */
@@ -82,31 +78,19 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     int numBlocksX = width / BLOCK_SIZE;
     int numBlocksY = height / BLOCK_SIZE;
 
-    /* TODO: need to benchmark these two initializations and see whats faster. Won't impact actual runtime, just curious */
     int  ** motionVectorR;
     int  ** motionVectorS;
-    // uint16_t ** minimumSAD;
-
     motionVectorR = calloc(numBlocksY, sizeof(int*));
     motionVectorS = calloc(numBlocksY, sizeof(int*));
-    // minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
     for (int i = 0; i < numBlocksY; i++) {
         motionVectorR[i] = calloc(numBlocksX, sizeof(int));
         motionVectorS[i] = calloc(numBlocksX, sizeof(int));
-        // minimumSAD[i]    = calloc(numBlocksX, sizeof(uint16_t));
     }    
+
     uint16_t minimumSAD[numBlocksY][numBlocksX];
     memset(minimumSAD, INT_MAX, numBlocksX * numBlocksY * sizeof(uint16_t));
 
-    // uint16_t minimumSAD[numBlocksY][numBlocksX];
-    // int motionVectorR[numBlocksY][numBlocksX];
-    // int motionVectorS[numBlocksY][numBlocksX];
-    // memset(minimumSAD, INT_MAX, numBlocksX * numBlocksY * sizeof(uint16_t));
-    // memset(motionVectorR, 0, numBlocksX * numBlocksY * sizeof(int));
-    // memset(motionVectorS, 0, numBlocksX * numBlocksY * sizeof(int));
-
     register uint16_t SAD;
-    // register int diff;
 
     int x = 0;
     int y = 0;
@@ -138,7 +122,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             int sHigh = (blockY == numBlocksY - 1) ? 0 : SEARCH_BOUND;
             int rHigh = (blockX == numBlocksX - 1) ? 0 : SEARCH_BOUND;
 
-            /* Loop through different motion vectors and compute the SAD for each */
+            /* Loop through different motion vectors and compute the SAD for each
+             * This can likely be sped up by "snaking" outwards from initial block.
+             **/
             for (int s = sLow; s < sHigh; s++) {
                 for (int r = rLow; r < rHigh; r++) {
 
@@ -225,19 +211,3 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
 
     printf("Completed in %f.\n", ttc);
 }
-
-/* Reads and prints a very very basic greyscale representation of the image. */
-void testImageRead(png_bytepp image, int height, int width) {
-    printf("Read image as %dx%d.\n", width, height);
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            if (image[y][x] < 155) printf("-");
-            else printf("#");
-        }
-        printf("\n");
-    }
-}
-
-// void print_uint8 (uint8x16_t data, char* name) {
-//     // http://www.armadeus.org/wiki/index.php?title=NEON_HelloWorld
-// }
