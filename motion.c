@@ -15,7 +15,7 @@
 
 png_bytepp loadImageFromPNG(char* png_file_name, int * width, int * height);
 int motion(png_bytepp prev, png_bytepp curr, int width, int height);
-int motion_unopt(png_bytepp prev, png_bytepp curr, int width, int height);
+// int motion_unopt(png_bytepp prev, png_bytepp curr, int width, int height);
 void testImageRead(png_bytepp image, int height, int width);
 
 #define BLOCK_SIZE 16
@@ -189,90 +189,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
         }
         y += BLOCK_SIZE;
     }
-}
-
-int motion_unopt(png_bytepp prev, png_bytepp curr, int width, int height) {
-
-
-    int numBlocksX = width / BLOCK_SIZE;
-    int numBlocksY = height / BLOCK_SIZE;
-
-    register int diff;
-    register int SAD;
-    register int r;
-    register int s;
-
-    int SADResults[numBlocksY][numBlocksX];
-    int MVECResults[numBlocksY][numBlocksX][2];
-    memset(SADResults, 0, numBlocksX * numBlocksY * sizeof(int));
-    memset(MVECResults, 0, numBlocksX * numBlocksY * 2 * sizeof(int));
-    
-
-    int x = 0;
-    int y = 0;
-    for (int yBlock = 0; yBlock < numBlocksY; yBlock++) {
-        x = 0;
-        for (int xBlock = 0; xBlock < numBlocksX; xBlock++) {
-            /* NEED TO ACCOUNT FOR EDGE BLOCKS!!!! */
-            /* Specifically, blocks in y 0 or BLOCK_SIZE, or x 0 or BLOCK_SIZE need special cases */
-            /* But for all internal blocks, no special handling is needed. */
-            printf("\n=== Block (%d:%d, %d:%d):\n", xBlock, x, yBlock, y);
-            
-            int minSAD = INT_MAX;
-            int min_mX = 0;
-            int min_mY = 0;
-
-            for (int s = -SEARCH_AREA; s < SEARCH_AREA; s += 1) {
-                for (int r = -SEARCH_AREA; r < SEARCH_AREA; r += 1) {
-                    /* Skip comparisons if we are checking the same pixels, or outside the image */
-                    if (r == 0 && s == 0) continue;
-                    if (y + s < 0) continue;
-                    if (y + s + BLOCK_SIZE > height) continue;
-                    if (x + r < 0) continue;
-                    if (x + r + BLOCK_SIZE > height) continue;
-
-        
-
-                    int SAD = 0;
-                    for (int j = 0; j < BLOCK_SIZE; j++) {
-                        for (int i = 0; i < BLOCK_SIZE; i++) {
-                            /* Compute the difference of equivelant pixels */
-                            diff = curr[y + j][x + i] - prev[y + j + s][x + i + r];
-                            if (diff < 0) SAD -= diff;
-                            else SAD += diff;
-                        }
-                    }
-                    printf("\tComputing sad at (x+r: %d, y+s: %d): %d \n\t\t", x+r, y+s, SAD);
-                    
-                    if (SAD < minSAD) {
-                        minSAD = SAD;
-                        min_mX = r;
-                        min_mY = s;
-                        printf("\n\t\t!!!!New minSAD: %d at (%d,%d)\n", minSAD, r, s);
-                    }
-
-                }
-            }
-
-            SADResults[yBlock][xBlock] = minSAD;
-            MVECResults[yBlock][xBlock][0] = min_mX;
-            MVECResults[yBlock][xBlock][1] = min_mY;
-
-            x += BLOCK_SIZE;
-        }
-
-        y += BLOCK_SIZE;
-    }
-
-
-    printf("BLOCK# | minSAD | mvec[r] | mvec[s]\n");
-    for (int j = 0; j < numBlocksY; j++) {
-        for (int i = 0; i < numBlocksX; i++) {
-            printf("%d, %d | %d | %d | %d\n", i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
-        }
-    }
-    return 1;
-
 }
 
 /* Reads and prints a very very basic greyscale representation of the image. */
