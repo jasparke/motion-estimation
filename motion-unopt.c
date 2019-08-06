@@ -30,11 +30,13 @@ static void fatal_error (const char * message, ...) {
 }
 
 int main (int argc, char **argv) {
-    if (argc < 2) fatal_error("Usage: ./motion FIRST_FRAME.PNG SECOND_FRAME.PNG");
+    // if (argc < 2) fatal_error("Usage: ./motion FIRST_FRAME.PNG SECOND_FRAME.PNG");
     
     int height, width, cheight, cwidth;
-    png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
-    png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
+    // png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
+    // png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
+    png_bytep * initial = loadImageFromPNG("images/busy.png", &width, &height);
+    png_bytep * current = loadImageFromPNG("images/busy-shift.png", &cwidth, &cheight);
     
     // if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
@@ -138,8 +140,6 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
                     if (x + r < 0) continue;
                     if (x + r + BLOCK_SIZE > height) continue;
 
-        
-
                     int SAD = 0;
                     for (int j = 0; j < BLOCK_SIZE; j++) {
                         for (int i = 0; i < BLOCK_SIZE; i++) {
@@ -149,7 +149,6 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
                             else SAD += diff;
                         }
                     }
-                    // printf("\tComputing sad at (x+r: %d, y+s: %d): %d \n\t\t", x+r, y+s, SAD);
                     
                     if (SAD < minSAD) {
                         minSAD = SAD;

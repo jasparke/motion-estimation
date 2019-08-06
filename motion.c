@@ -30,11 +30,13 @@ static void fatal_error (const char * message, ...) {
 }
 
 int main (int argc, char **argv) {
-    if (argc < 2) fatal_error("Usage: ./motion FIRST_FRAME.PNG SECOND_FRAME.PNG");
+    // if (argc < 2) fatal_error("Usage: ./motion FIRST_FRAME.PNG SECOND_FRAME.PNG");
     
     int height, width, cheight, cwidth;
-    png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
-    png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
+    // png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
+    // png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
+    png_bytep * initial = loadImageFromPNG("images/busy.png", &width, &height);
+    png_bytep * current = loadImageFromPNG("images/busy-shift.png", &cwidth, &cheight);
     
     if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
@@ -218,7 +220,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                      * vpaddlq_u8: Pairwise additon to transform to u16 from u8 to prevent overflow. Return uint16x8_t.
                      * vaddq_u16: Computes the sum of all rows abs differences.
                      */
-
                     sum = vpaddlq_u8(vabdq_u8(curr0,  prev0));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  prev1)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  prev2)));
@@ -235,26 +236,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, prev13)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
-
-                    // uint16x8_t     sum0 = vpaddlq_u8(vabdq_u8(curr0, &(prev[y][x])));
-                    // uint16x8_t     sum1 = vpaddlq_u8(vabdq_u8(curr1, &(prev[y+1][x])));
-                    // uint16x8_t     sum2 = vpaddlq_u8(vabdq_u8(curr2, &(prev[y+2][x])));
-                    // uint16x8_t     sum3 = vpaddlq_u8(vabdq_u8(curr3, &(prev[y+3][x])));
-
-                    // sum0 = vaddq_u16(sum0, vpaddlq_u8(vabdq_u8(curr4,  &(prev[y+4][x]))));
-                    // sum1 = vaddq_u16(sum1, vpaddlq_u8(vabdq_u8(curr5,  &(prev[y+5][x]))));
-                    // sum2 = vaddq_u16(sum2, vpaddlq_u8(vabdq_u8(curr6,  &(prev[y+6][x]))));
-                    // sum3 = vaddq_u16(sum3, vpaddlq_u8(vabdq_u8(curr7,  &(prev[y+7][x]))));
-
-                    // sum0 = vaddq_u16(sum0, vpaddlq_u8(vabdq_u8(curr8,  &(prev[y+8][x]))));
-                    // sum1 = vaddq_u16(sum1, vpaddlq_u8(vabdq_u8(curr9,  &(prev[y+9][x]))));
-                    // sum2 = vaddq_u16(sum2, vpaddlq_u8(vabdq_u8(curr10, &(prev[y+10][x]))));
-                    // sum3 = vaddq_u16(sum3, vpaddlq_u8(vabdq_u8(curr11, &(prev[y+11][x]))));
-
-                    // sum0 = vaddq_u16(sum0, vpaddlq_u8(vabdq_u8(curr12, &(prev[y+12][x]))));
-                    // sum1 = vaddq_u16(sum1, vpaddlq_u8(vabdq_u8(curr13, &(prev[y+13][x]))));
-                    // sum2 = vaddq_u16(sum2, vpaddlq_u8(vabdq_u8(curr14, &(prev[y+14][x]))));
-                    // sum3 = vaddq_u16(sum3, vpaddlq_u8(vabdq_u8(curr15, &(prev[y+15][x]))));
 
                     /* Sum the resultant vector elements */
                     SAD = vgetq_lane_u16(sum, 0);
