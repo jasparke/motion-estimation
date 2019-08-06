@@ -112,71 +112,20 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             /* Load each row of the block into a vector */
             uint8x16_t curr0  = vld1q_u8(&(curr[y]   [x]));
             uint8x16_t curr1  = vld1q_u8(&(curr[y+1] [x]));
-            uint8x16_t curr2  = vld1q_u8(&(curr[y+2] [x]));
-            uint8x16_t curr3  = vld1q_u8(&(curr[y+3] [x]));
-            uint8x16_t curr4  = vld1q_u8(&(curr[y+4] [x]));
-            uint8x16_t curr5  = vld1q_u8(&(curr[y+5] [x]));
-            uint8x16_t curr6  = vld1q_u8(&(curr[y+6] [x]));
-            uint8x16_t curr7  = vld1q_u8(&(curr[y+7] [x]));
-            uint8x16_t curr8  = vld1q_u8(&(curr[y+8] [x]));
-            uint8x16_t curr9  = vld1q_u8(&(curr[y+9] [x]));
-            uint8x16_t curr10 = vld1q_u8(&(curr[y+10][x]));
-            uint8x16_t curr11 = vld1q_u8(&(curr[y+11][x]));
-            uint8x16_t curr12 = vld1q_u8(&(curr[y+12][x]));
-            uint8x16_t curr13 = vld1q_u8(&(curr[y+13][x]));
-            uint8x16_t curr14 = vld1q_u8(&(curr[y+14][x]));
+            //... 2->14
             uint8x16_t curr15 = vld1q_u8(&(curr[y+15][x]));
 
             /* Load each row of the block for prev frame into a vector */
-            /* then compute the sum for that row */
-            uint8x16_t prevRow = vld1q_u8(&(prev[y]   [x]));
-            uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr0,  prevRow));
-
-            prevRow  = vld1q_u8(&(prev[y+1] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+2] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+3] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+4] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+5] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+6] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+7] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+8] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+9] [x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9,  prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+10][x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+11][x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+12][x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+13][x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+14][x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prevRow)));
-
-            prevRow  = vld1q_u8(&(prev[y+15][x]));
-            sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prevRow)));
+            uint8x16_t prev0  = vld1q_u8(&(prev[y]   [x]));
+            uint8x16_t prev1  = vld1q_u8(&(prev[y+1] [x]));
+            //... 2->14
+            uint8x16_t prev15 = vld1q_u8(&(prev[y+15][x]));
             
+            /* Compute SAD for identical block position in frame */
+            uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr0,  prev0));
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  prev1)));
+            //... 2->14
+            sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
             /* Sum the resultant vector elements */
             SAD = vgetq_lane_u16(sum, 0);
@@ -212,55 +161,45 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     /* Load a shifted version of the block for computing the SAD */
                     /* FUTURE: Optimize this to not reload pixels that are used multiple times. 
                      * Change prev to an array and cycle through it. */
-                    prevRow = vld1q_u8(&(prev[y]   [x]));
-                    uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr0,  prevRow));
 
-                    prevRow  = vld1q_u8(&(prev[y+1] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  prevRow)));
+                    prev0  = vld1q_u8(&(prev[y+s]   [x+r]));
+                    prev1  = vld1q_u8(&(prev[y+s+1] [x+r]));
+                    prev2  = vld1q_u8(&(prev[y+s+2] [x+r]));
+                    prev3  = vld1q_u8(&(prev[y+s+3] [x+r]));
+                    prev4  = vld1q_u8(&(prev[y+s+4] [x+r]));
+                    prev5  = vld1q_u8(&(prev[y+s+5] [x+r]));
+                    prev6  = vld1q_u8(&(prev[y+s+6] [x+r]));
+                    prev7  = vld1q_u8(&(prev[y+s+7] [x+r]));
+                    prev8  = vld1q_u8(&(prev[y+s+8] [x+r]));
+                    prev9  = vld1q_u8(&(prev[y+s+9] [x+r]));
+                    prev10 = vld1q_u8(&(prev[y+s+10][x+r]));
+                    prev11 = vld1q_u8(&(prev[y+s+11][x+r]));
+                    prev12 = vld1q_u8(&(prev[y+s+12][x+r]));
+                    prev13 = vld1q_u8(&(prev[y+s+13][x+r]));
+                    prev14 = vld1q_u8(&(prev[y+s+14][x+r]));
+                    prev15 = vld1q_u8(&(prev[y+s+15][x+r]));
 
-                    prevRow  = vld1q_u8(&(prev[y+2] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+3] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3,  prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+4] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4,  prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+5] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5,  prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+6] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6,  prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+7] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7,  prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+8] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8,  prevRow)));
-
-
-                    prevRow  = vld1q_u8(&(prev[y+9] [x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9,  prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+10][x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+11][x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+12][x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+13][x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, prevRow)));
-
-                    prevRow  = vld1q_u8(&(prev[y+14][x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prevRow)));
-                    
-                    prevRow  = vld1q_u8(&(prev[y+15][x]));
-                    sum      = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prevRow)));
-                    
+                    /* Compute the Sum in 3 steps: 
+                     * vapdq_u8: Compute the absdifference of elements in curr & prev. Return uint8x16_t.
+                     * vpaddlq_u8: Pairwise additon to transform to u16 from u8 to prevent overflow. Return uint16x8_t.
+                     * vaddq_u16: Computes the sum of all rows abs differences.
+                     */
+                    sum = vpaddlq_u8(vabdq_u8(curr0,  prev0));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1,  prev1)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2,  prev2)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3,  prev3)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4,  prev4)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5,  prev5)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6,  prev6)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7,  prev7)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8,  prev8)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9,  prev9)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, prev10)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, prev11)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, prev12)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, prev13)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
                     /* Sum the resultant vector elements */
                     SAD = vgetq_lane_u16(sum, 0);
