@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <arm_neon.h>
+#include <time.h>
 
 png_bytepp loadImageFromPNG(char* png_file_name, int * width, int * height);
 int motion(png_bytepp prev, png_bytepp curr, int width, int height);
@@ -212,7 +213,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
         y += BLOCK_SIZE;
     }
 
-    float ttc = (float)(clock() - begin) / CLOCKS_PER_SEC;
+    double ttc = (double)(clock() - begin) / CLOCKS_PER_SEC;
 
     
     /* Strictly for printing SAD output. */
@@ -222,7 +223,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
         }
     }
 
-    printf("Completed in %f.\n");
+    printf("Completed in %f.\n", ttc);
 }
 
 /* Reads and prints a very very basic greyscale representation of the image. */

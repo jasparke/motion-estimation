@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 
 png_bytepp loadImageFromPNG(char* png_file_name, int * width, int * height);
 int motion(png_bytepp prev, png_bytepp curr, int width, int height);
@@ -172,7 +173,7 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
         y += BLOCK_SIZE;
     }
 
-    float ttc = (float)(clock() - begin) / CLOCKS_PER_SEC;
+    double ttc = (float)(clock() - begin) / CLOCKS_PER_SEC;
 
     for (int j = 0; j < numBlocksY; j++) {
         for (int i = 0; i < numBlocksX; i++) {
@@ -180,7 +181,7 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
         }
     }
 
-    printf("Completed in %f.\n");
+    printf("Completed in %f.\n", ttc);
 }
 
 /* Reads and prints a very very basic greyscale representation of the image. */
