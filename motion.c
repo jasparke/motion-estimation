@@ -152,31 +152,37 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     uint8x16_t prev14 = vld1q_u8(&(prev[y+14][x]));
                     uint8x16_t prev15 = vld1q_u8(&(prev[y+15][x]));
 
-                    /* Compute the Sum */
-                    uint8x16_t sum = vaddq_u8(vabdq_u8(curr0, prev0), vabdq_u8(curr1,prev1));
-                    sum = vaddq_u8(sum, vabdq_u8(curr1, prev1));
-                    sum = vaddq_u8(sum, vabdq_u8(curr2, prev2));
-                    sum = vaddq_u8(sum, vabdq_u8(curr3, prev3));
-                    sum = vaddq_u8(sum, vabdq_u8(curr4, prev4));
-                    sum = vaddq_u8(sum, vabdq_u8(curr5, prev5));
-                    sum = vaddq_u8(sum, vabdq_u8(curr6, prev6));
-                    sum = vaddq_u8(sum, vabdq_u8(curr7, prev7));
-                    sum = vaddq_u8(sum, vabdq_u8(curr8, prev8));
-                    sum = vaddq_u8(sum, vabdq_u8(curr9, prev9));
-                    sum = vaddq_u8(sum, vabdq_u8(curr10, prev10));
-                    sum = vaddq_u8(sum, vabdq_u8(curr11, prev11));
-                    sum = vaddq_u8(sum, vabdq_u8(curr12, prev12));
-                    sum = vaddq_u8(sum, vabdq_u8(curr13, prev13));
-                    sum = vaddq_u8(sum, vabdq_u8(curr14, prev14));
-                    sum = vaddq_u8(sum, vabdq_u8(curr15, prev15));
+                    /* Compute the Sum in 3 steps: 
+                     * vapdq_u8: Compute the absdifference of elements in curr & prev. Return uint8x16_t.
+                     * vpaddlq_u8: Pairwise additon to transform to u16 from u8 to prevent overflow. Return uint16x8_t.
+                     * vaddq_u16: Computes the sum of all rows abs differences.
+                     */
+                    uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr1,prev1));
+                    sum = vaddq_u16(sum, vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1, prev1)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2, prev2)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3, prev3)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr4, prev4)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr5, prev5)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr6, prev6)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr7, prev7)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr8, prev8)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr9, prev9)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr10, prev10)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr11, prev11)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr12, prev12)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr13, prev13)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
+                    sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
-                    /* get the values for sum */
-                    for (int i = 0; i < BLOCK_SIZE; i+=4) {
-                        SAD += vgetq_lane_u8(sum, i);
-                        SAD += vgetq_lane_u8(sum, i+1);
-                        SAD += vgetq_lane_u8(sum, i+2);
-                        SAD += vgetq_lane_u8(sum, i+3);
-                    }
+                    /* Sum the resultant vector elements */
+                    SAD = vgetq_lane_u16(sum, 0);
+                    SAD = vgetq_lane_u16(sum, 1);
+                    SAD = vgetq_lane_u16(sum, 2);
+                    SAD = vgetq_lane_u16(sum, 3);
+                    SAD = vgetq_lane_u16(sum, 4);
+                    SAD = vgetq_lane_u16(sum, 5);
+                    SAD = vgetq_lane_u16(sum, 6);
+                    SAD = vgetq_lane_u16(sum, 7);
 
                     if (SAD < minimumSAD[blockY][blockX]) {
                         minimumSAD[blockY][blockX] = SAD;
