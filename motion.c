@@ -154,7 +154,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                      * vaddq_u16: Computes the sum of all rows abs differences.
                      */
 
-                    uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr1,prev1));
+                    uint16x8_t     sum = vpaddlq_u8(vabdq_u8(curr0, prev0));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr1, prev1)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr2, prev2)));
                     sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr3, prev3)));
