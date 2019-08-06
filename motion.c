@@ -79,21 +79,21 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     int numBlocksX = width / BLOCK_SIZE;
     int numBlocksY = height / BLOCK_SIZE;
 
-    uint8_t  ** motionVectorR;
-    uint8_t  ** motionVectorS;
-
-    /* IDK if this would make a difference, but only need 12 bits to store SAD worst case */
+    /* Pretty sure this initialization causes the segfault.... */
+    int  ** motionVectorR;
+    int  ** motionVectorS;
     uint16_t ** minimumSAD;
 
     motionVectorR = calloc(numBlocksY, sizeof(int*));
     motionVectorS = calloc(numBlocksY, sizeof(int*));
     minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
-
     for (int i = 0; i < numBlocksY; i++) {
         motionVectorR = calloc(numBlocksX, sizeof(int));
         motionVectorS = calloc(numBlocksX, sizeof(int));
-        minimumSAD    = calloc(numBlocksX, sizeof(uint8_t));
+        minimumSAD    = calloc(numBlocksX, sizeof(uint16_t));
     }
+
+    
 
     register uint16_t SAD;
     // register int diff;
