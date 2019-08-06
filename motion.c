@@ -13,10 +13,11 @@
 #include <stdarg.h>
 
 png_bytepp loadImageFromPNG(char* png_file_name, int * width, int * height);
-int motion(png_bytepp prev, png_bytepp curr, int height, int width);
+int motion(png_bytepp prev, png_bytepp curr, int width, int height);
 void testImageRead(png_bytepp image, int height, int width);
 
 #define BLOCK_SIZE 16
+#define SEARCH_AREA 32
 
 
 static void fatal_error (const char * message, ...) {
@@ -34,9 +35,11 @@ int main (int argc, char **argv) {
     png_bytep * initial = loadImageFromPNG(argv[1], &width, &height);
     png_bytep * current = loadImageFromPNG(argv[2], &cwidth, &cheight);
     
-    if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
+    // if (height != cheight || width != cwidth) fatal_error("ERROR: Expect equal sized frames as input.");
 
-    // motion(&prev, &curr, height, width);
+    motion(initial, current, width, height);
+    // testImageRead(initial, height, width);
+    // testImageRead(current, height, width);
 }
 
 png_bytepp loadImageFromPNG(char *png_file_name, int * width, int * height) {
@@ -55,7 +58,7 @@ png_bytepp loadImageFromPNG(char *png_file_name, int * width, int * height) {
      * check later. Not optimizing as not relevant.
      **/
     *width = png_get_image_width(png_ptr, info_ptr);
-    *height = png_get_image_width(png_ptr, info_ptr);
+    *height = png_get_image_height(png_ptr, info_ptr);
     png_bytepp image = (png_bytepp)malloc(sizeof(png_bytep) * *height);
     for (int i = 0; i < *width; i++) image[i] = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr));
 
@@ -68,7 +71,7 @@ png_bytepp loadImageFromPNG(char *png_file_name, int * width, int * height) {
     return image;
 }
 
-int motion(png_bytepp prev, png_bytepp curr, int height, int width) {
+int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
 
     const int numBlocksX = width / BLOCK_SIZE;
     const int numBlocksY = height / BLOCK_SIZE;
@@ -78,7 +81,14 @@ int motion(png_bytepp prev, png_bytepp curr, int height, int width) {
     register int r;
     register int s;
 
-    int **SADResults = calloc(BLOCK_SIZE, sizeof(int) * BLOCK_SIZE);
+    // int **SADResults = calloc(BLOCK_SIZE, sizeof(int) * BLOCK_SIZE);
+    // int ***MVECResults = calloc(BLOCK_SIZE*2, sizeof(int) * BLOCK_SIZE*2);
+
+    int SADResults[numBlocksY][numBlocksX];
+    int MVECResults[numBlocksY][numBlocksX][2];
+    memset(SADResults, 0, numBlocksX * numBlocksY * sizeof(int));
+    memset(MVECResults, 0, numBlocksX * numBlocksY * 2 * sizeof(int));
+    
     
     /*
      * Check the 8 surrounding blocks of the image to determine which block matches best.
@@ -97,66 +107,77 @@ int motion(png_bytepp prev, png_bytepp curr, int height, int width) {
     //     {-1, 0}, /* 0, 0 */ {1, 0},
     //     {-1, 1},   {0, 1},  {1, 1}
     // };
-    int pixel_displacement[8][2] = {
-        {-16, -16}, {0, -16},  {16, -16},
-        {-16, 0},  /* 0, 0 */ {16, 0},
-        {-16, 16},  {0, 16},  {16, 16}
-    };
+    // int pixel_displacement[8][2] = {
+    //     {-16, -16}, {0, -16},  {16, -16},
+    //     {-16, 0},  /* 0, 0 */ {16, 0},
+    //     {-16, 16},  {0, 16},  {16, 16}
+    // };
 
-    /* Loop over each block in the image, and  */
-    for (int row = 0; row < height; row += BLOCK_SIZE) {
-        for (int col = 0; col < width; col += BLOCK_SIZE) {
+    int x = 0;
+    int y = 0;
+    for (int yBlock = 0; yBlock < numBlocksY; yBlock++) {
+        x = 0;
+        for (int xBlock = 0; xBlock < numBlocksX; xBlock++) {
             /* NEED TO ACCOUNT FOR EDGE BLOCKS!!!! */
-            /* Specifically, blocks in row 0 or BLOCK_SIZE, or col 0 or BLOCK_SIZE need special cases */
+            /* Specifically, blocks in y 0 or BLOCK_SIZE, or x 0 or BLOCK_SIZE need special cases */
             /* But for all internal blocks, no special handling is needed. */
-
+            printf("\n=== Block (%d:%d, %d:%d):\n", xBlock, x, yBlock, y);
             
             int minSAD = INT_MAX;
-            int *mVec = { 0 };
+            int min_mX = 0;
+            int min_mY = 0;
 
-            for (int b = 0; b < 8; b++) {
-                r = pixel_displacement[b][0];
-                s = pixel_displacement[b][1];
+            for (int s = -SEARCH_AREA; s < SEARCH_AREA; s += 1) {
+                for (int r = -SEARCH_AREA; r < SEARCH_AREA; r += 1) {
+                    /* Skip comparisons if we are checking the same pixels, or outside the image */
+                    if (r == 0 && s == 0) continue;
+                    if (y + s < 0) continue;
+                    if (y + s + BLOCK_SIZE > height) continue;
+                    if (x + r < 0) continue;
+                    if (x + r + BLOCK_SIZE > height) continue;
 
-                int SAD = 0;
-                /* Can only check blocks that are still part of the image. Skip edges. */
-                if (row == 0 && (b < 3)) {
-                    SAD = INT_MAX;
-                    continue;
-                };
-                if (height - row < BLOCK_SIZE && b > 4) {
-                    SAD = INT_MAX;
-                    continue;
-                };
-                if (col == 0 && (b == 0 || b == 3 || b == 5)) {
-                    SAD = INT_MAX;
-                    continue;
-                };
-                if (width - col < BLOCK_SIZE && (b == 2 || b == 4 || b == 7)) {
-                    SAD = INT_MAX;
-                    continue;
-                };
+        
 
-                /* r + s are predefined, this could be unrolled a lot. */
-                for (int y; y < BLOCK_SIZE; y++) {
-                    for (int x; x < BLOCK_SIZE; x++) {
-                        /* Compute the difference of equivelant pixels */
-                        diff = curr[row + y][col + x] - prev[row + y + s][col + x + r];
-                        if (diff < 0) SAD -= diff;
-                        else SAD += diff;
+                    int SAD = 0;
+                    for (int j = 0; j < BLOCK_SIZE; j++) {
+                        for (int i = 0; i < BLOCK_SIZE; i++) {
+                            /* Compute the difference of equivelant pixels */
+                            diff = curr[y + j][x + i] - prev[y + j + s][x + i + r];
+                            if (diff < 0) SAD -= diff;
+                            else SAD += diff;
+                        }
                     }
-                }
+                    printf("\tComputing sad at (x+r: %d, y+s: %d): %d \n\t\t", x+r, y+s, SAD);
+                    
+                    if (SAD < minSAD) {
+                        minSAD = SAD;
+                        min_mX = r;
+                        min_mY = s;
+                        printf("\n\t\t!!!!New minSAD: %d at (%d,%d)\n", minSAD, r, s);
+                    }
 
-                if (SAD < minSAD) {
-                    minSAD = SAD;
-                    mVec = pixel_displacement[b];
                 }
             }
+
+            SADResults[yBlock][xBlock] = minSAD;
+            MVECResults[yBlock][xBlock][0] = min_mX;
+            MVECResults[yBlock][xBlock][1] = min_mY;
+
+            x += BLOCK_SIZE;
         }
+
+        y += BLOCK_SIZE;
     }
 
 
+    printf("BLOCK# | minSAD | mvec[r] | mvec[s]\n");
+    for (int j = 0; j < numBlocksY; j++) {
+        for (int i = 0; i < numBlocksX; i++) {
+            printf("%d, %d | %d | %d | %d\n", i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
+        }
+    }
     return 1;
+
 }
 
 /* Reads and prints a very very basic greyscale representation of the image. */
