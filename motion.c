@@ -161,6 +161,17 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
             sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr14, prev14)));
             sum = vaddq_u16(sum, vpaddlq_u8(vabdq_u8(curr15, prev15)));
 
+            /* Sum the resultant vector elements */
+            SAD = vgetq_lane_u16(sum, 0);
+            SAD += vgetq_lane_u16(sum, 1);
+            SAD += vgetq_lane_u16(sum, 2);
+            SAD += vgetq_lane_u16(sum, 3);
+            SAD += vgetq_lane_u16(sum, 4);
+            SAD += vgetq_lane_u16(sum, 5);
+            SAD += vgetq_lane_u16(sum, 6);
+            SAD += vgetq_lane_u16(sum, 7);
+
+
             if (SAD < minimumSAD[blockY][blockX]) {
                 minimumSAD[blockY][blockX] = SAD;
                 motionVectorR[blockY][blockX] = 0;
@@ -247,13 +258,13 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
 
                     /* Sum the resultant vector elements */
                     SAD = vgetq_lane_u16(sum, 0);
-                    SAD = vgetq_lane_u16(sum, 1);
-                    SAD = vgetq_lane_u16(sum, 2);
-                    SAD = vgetq_lane_u16(sum, 3);
-                    SAD = vgetq_lane_u16(sum, 4);
-                    SAD = vgetq_lane_u16(sum, 5);
-                    SAD = vgetq_lane_u16(sum, 6);
-                    SAD = vgetq_lane_u16(sum, 7);
+                    SAD += vgetq_lane_u16(sum, 1);
+                    SAD += vgetq_lane_u16(sum, 2);
+                    SAD += vgetq_lane_u16(sum, 3);
+                    SAD += vgetq_lane_u16(sum, 4);
+                    SAD += vgetq_lane_u16(sum, 5);
+                    SAD += vgetq_lane_u16(sum, 6);
+                    SAD += vgetq_lane_u16(sum, 7);
 
                     if (SAD < minimumSAD[blockY][blockX]) {
                         minimumSAD[blockY][blockX] = SAD;
