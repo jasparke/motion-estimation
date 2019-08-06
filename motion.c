@@ -81,26 +81,26 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     int numBlocksX = width / BLOCK_SIZE;
     int numBlocksY = height / BLOCK_SIZE;
 
-    /* Pretty sure this initialization causes the segfault.... */
-    // int  ** motionVectorR;
-    // int  ** motionVectorS;
-    // uint16_t ** minimumSAD;
+    /* TODO: need to benchmark these two initializations and see whats faster. Won't impact actual runtime, just curious */
+    int  ** motionVectorR;
+    int  ** motionVectorS;
+    uint16_t ** minimumSAD;
 
-    // motionVectorR = calloc(numBlocksY, sizeof(int*));
-    // motionVectorS = calloc(numBlocksY, sizeof(int*));
-    // minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
-    // for (int i = 0; i < numBlocksY; i++) {
-    //     motionVectorR[i] = calloc(numBlocksX, sizeof(int));
-    //     motionVectorS[i] = calloc(numBlocksX, sizeof(int));
-    //     minimumSAD[i]    = calloc(numBlocksX, sizeof(uint16_t));
-    // }
+    motionVectorR = calloc(numBlocksY, sizeof(int*));
+    motionVectorS = calloc(numBlocksY, sizeof(int*));
+    minimumSAD    = calloc(numBlocksY, sizeof(uint16_t*));
+    for (int i = 0; i < numBlocksY; i++) {
+        motionVectorR[i] = calloc(numBlocksX, sizeof(int));
+        motionVectorS[i] = calloc(numBlocksX, sizeof(int));
+        minimumSAD[i]    = calloc(numBlocksX, sizeof(uint16_t));
+    }
 
-    uint16_t minimumSAD[numBlocksY][numBlocksX];
-    int motionVectorR[numBlocksY][numBlocksX];
-    int motionVectorS[numBlocksY][numBlocksX];
-    memset(minimumSAD, 0, numBlocksX * numBlocksY * sizeof(uint16_t));
-    memset(motionVectorR, 0, numBlocksX * numBlocksY * sizeof(int));
-    memset(motionVectorS, 0, numBlocksX * numBlocksY * sizeof(int));
+    // uint16_t minimumSAD[numBlocksY][numBlocksX];
+    // int motionVectorR[numBlocksY][numBlocksX];
+    // int motionVectorS[numBlocksY][numBlocksX];
+    // memset(minimumSAD, 0, numBlocksX * numBlocksY * sizeof(uint16_t));
+    // memset(motionVectorR, 0, numBlocksX * numBlocksY * sizeof(int));
+    // memset(motionVectorS, 0, numBlocksX * numBlocksY * sizeof(int));
 
     register uint16_t SAD;
     // register int diff;
@@ -108,9 +108,9 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
     int x = 0;
     int y = 0;
     /* Each block is processed in turn, by row. */
-    for (int blockY = 0; blockY < numBlocksY; blockY) {
+    for (int blockY = 0; blockY < numBlocksY; blockY++) {
         x = 0;
-        for (int blockX = 0; blockX < numBlocksX; blockX) {
+        for (int blockX = 0; blockX < numBlocksX; blockX++) {
             /* Load each row of the block into a vector */
             uint8x16_t curr0  = vld1q_u8(&(curr[y]   [x]));
             uint8x16_t curr1  = vld1q_u8(&(curr[y+1] [x]));
@@ -192,7 +192,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                     SAD = vgetq_lane_u16(sum, 5);
                     SAD = vgetq_lane_u16(sum, 6);
                     SAD = vgetq_lane_u16(sum, 7);
-                    printf("post-sum(%d,%d,%d,%d): %d\n",blockX,blockY,r,s,SAD);
+                    // printf("post-sum(%d,%d,%d,%d): %d\n",blockX,blockY,r,s,SAD);
 
                     if (SAD < minimumSAD[blockY][blockX]) {
                         minimumSAD[blockY][blockX] = SAD;
