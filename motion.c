@@ -93,8 +93,6 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
         minimumSAD    = calloc(numBlocksX, sizeof(uint16_t));
     }
 
-    
-
     register uint16_t SAD;
     // register int diff;
 
@@ -189,7 +187,7 @@ int motion (png_bytepp prev, png_bytepp curr, int width, int height) {
                         motionVectorR[blockY][blockX] = r;
                         motionVectorS[blockY][blockX] = s;
 
-                        printf("Found new min SAD (%02d,%02d) of %d\n");
+                        printf("Found new min SAD (%02d,%02d) of %d\n", r, s, SAD);
                     }
                 }
             }

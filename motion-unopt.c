@@ -121,7 +121,7 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
             /* NEED TO ACCOUNT FOR EDGE BLOCKS!!!! */
             /* Specifically, blocks in y 0 or BLOCK_SIZE, or x 0 or BLOCK_SIZE need special cases */
             /* But for all internal blocks, no special handling is needed. */
-            printf("\n=== Block (%d:%d, %d:%d):\n", xBlock, x, yBlock, y);
+            // printf("\n=== Block (%d:%d, %d:%d):\n", xBlock, x, yBlock, y);
             
             int minSAD = INT_MAX;
             int min_mX = 0;
@@ -147,13 +147,15 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
                             else SAD += diff;
                         }
                     }
-                    printf("\tComputing sad at (x+r: %d, y+s: %d): %d \n\t\t", x+r, y+s, SAD);
+                    // printf("\tComputing sad at (x+r: %d, y+s: %d): %d \n\t\t", x+r, y+s, SAD);
                     
                     if (SAD < minSAD) {
                         minSAD = SAD;
                         min_mX = r;
                         min_mY = s;
-                        printf("\n\t\t!!!!New minSAD: %d at (%d,%d)\n", minSAD, r, s);
+                        // printf("\n\t\t!!!!New minSAD: %d at (%d,%d)\n", minSAD, r, s);
+
+                        printf("Found new min SAD (%02d,%02d) of %d\n", r, s, SAD);
                     }
 
                 }
@@ -170,10 +172,10 @@ int motion(png_bytepp prev, png_bytepp curr, int width, int height) {
     }
 
 
-    printf("BLOCK# | minSAD | mvec[r] | mvec[s]\n");
+    // printf("BLOCK# | minSAD | mvec[r] | mvec[s]\n");
     for (int j = 0; j < numBlocksY; j++) {
         for (int i = 0; i < numBlocksX; i++) {
-            printf("%d, %d | %d | %d | %d\n", i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
+            // printf("%d, %d | %d | %d | %d\n", i, j, SADResults[j][i], MVECResults[j][i][0],MVECResults[j][i][1]);
         }
     }
     return 1;
