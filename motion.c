@@ -1,5 +1,5 @@
 /*
- * Motion Estimation - Unoptimized
+ * Motion Estimation
  * 
  * SENG 440 - Summer 2019
  * Jason Parker - V00857251
