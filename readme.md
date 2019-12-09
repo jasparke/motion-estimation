@@ -1,4 +1,4 @@
-# SENG 440 - Motion Estimation
+# Motion Estimation
 
 ## Usage Instructions
 
